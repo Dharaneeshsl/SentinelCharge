@@ -174,7 +174,7 @@ Sheet name: `BatteryLog`
 ### Example Row
 
 ```
-2026-01-10T01:30:12Z | 27 | false | KILL_APPS | BATTERY_LOW | LAPTOP-WIN
+27 | false | true | 2026-01-10T01:30:12Z 
 ```
 
 ---
