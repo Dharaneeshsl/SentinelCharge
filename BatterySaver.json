@@ -1,0 +1,115 @@
+{
+  "name": "BatterySaver",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "value": 5 }]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [-400, -60],
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/status",
+        "options": { "responseFormat": "json" }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [-200, -60],
+      "name": "Get Battery Status"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ Number($json.percent) }}",
+              "rightValue": 30,
+              "operator": "lt"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [0, -60],
+      "name": "Battery < 30%"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3001/kill"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [220, -160],
+      "name": "Kill Heavy Apps"
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "{{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "⚠️ Battery Low Alert\nBattery: {{ $json.percent }}%\nCharging: {{ $json.isCharging }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [420, -160],
+      "name": "Telegram Alert",
+      "credentials": {
+        "telegramApi": {
+          "name": "TELEGRAM_API_CREDENTIAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": "{{ $env.GOOGLE_SHEET_ID }}",
+        "sheetName": "Battery Logs",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "percent": "={{ $json.percent }}",
+            "isCharging": "={{ $json.isCharging }}",
+            "hasBattery": "={{ $json.hasBattery }}",
+            "timestamp": "={{ $json.timestamp }}"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [640, 20],
+      "name": "Log to Google Sheets",
+      "credentials": {
+        "googleApi": {
+          "name": "GOOGLE_SERVICE_ACCOUNT"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [[{ "node": "Get Battery Status", "type": "main" }]]
+    },
+    "Get Battery Status": {
+      "main": [[{ "node": "Battery < 30%", "type": "main" }]]
+    },
+    "Battery < 30%": {
+      "main": [
+        [{ "node": "Kill Heavy Apps", "type": "main" }],
+        [{ "node": "Log to Google Sheets", "type": "main" }]
+      ]
+    },
+    "Kill Heavy Apps": {
+      "main": [[{ "node": "Telegram Alert", "type": "main" }]]
+    },
+    "Telegram Alert": {
+      "main": [[{ "node": "Log to Google Sheets", "type": "main" }]]
+    }
+  },
+  "active": false
+}
