@@ -20,7 +20,8 @@ This system continuously monitors your laptop’s battery state and automaticall
 
 ---
 Executed Workflow
-<img width="1322" height="540" alt="image" src="https://github.com/user-attachments/assets/0ab3acde-4233-46df-95ce-632ef2a4fe77" />
+<img width="1365" height="631" alt="image" src="https://github.com/user-attachments/assets/d0d16e83-7fbc-4c65-baf7-90c6a56ede57" />
+
 
 
 ## 🧱 Architecture
